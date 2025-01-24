@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:image_network/image_network.dart';
 import '../../repository/translation_model.dart';
-import '../../utils/global.dart';
 
 class ChatBubble extends StatelessWidget {
   final bool isMine;
   final String message;
   final String? photoUrl;
   final String? displayName;
-  final List<TranslationModel> translations;
+  final TranslationModel? translated;
 
   final double _iconSize = 24.0;
 
@@ -17,7 +16,7 @@ class ChatBubble extends StatelessWidget {
       required this.message,
       required this.photoUrl,
       required this.displayName,
-      this.translations = const [],
+      this.translated,
       super.key});
 
   @override
@@ -71,8 +70,24 @@ class ChatBubble extends StatelessWidget {
                 .bodyMedium
                 ?.copyWith(color: Colors.white),
           ),
-          // english version (if there is)
-          if (translations.isNotEmpty) buildTranslation(translations, context),
+
+          if (translated != null && translated!.translation.isNotEmpty)
+            Text.rich(
+              TextSpan(children: [
+                TextSpan(
+                    text: '${translated!.code} ',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isMine ? Colors.black87 : Colors.grey)),
+                TextSpan(
+                  text: translated!.translation,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: isMine ? Colors.black87 : Colors.grey),
+                )
+              ]),
+              textAlign: isMine ? TextAlign.right : TextAlign.left,
+            ),
         ],
       ),
     ));
@@ -84,33 +99,6 @@ class ChatBubble extends StatelessWidget {
             isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: isMine ? widgets.reversed.toList() : widgets,
       ),
-    );
-  }
-
-  Widget buildTranslation(
-      List<TranslationModel> translations, BuildContext context) {
-    TranslationModel? translation;
-    try {
-      translation =
-          translations.firstWhere((e) => e.code == Global.localLanguageCode);
-    } catch (e) {
-      return const SizedBox.shrink();
-    }
-    return Text.rich(
-      TextSpan(children: [
-        TextSpan(
-            text: '${translation.code} ',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: isMine ? Colors.black87 : Colors.grey)),
-        TextSpan(
-          text: translation.translation,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontStyle: FontStyle.italic,
-              color: isMine ? Colors.black87 : Colors.grey),
-        )
-      ]),
-      textAlign: isMine ? TextAlign.right : TextAlign.left,
     );
   }
 }
