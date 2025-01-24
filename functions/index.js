@@ -34,25 +34,25 @@ exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", as
   console.log(`Original: ${original}`);
   console.log(`Has translations: ${translations != null}`);
 
-  // 1. Kiểm tra điều kiện để skip
+  // 1. Check conditions to skip
   if (!message || message.trim() === '') {
     console.log("Message is empty, skipping");
     return;
   }
 
-  // 2. Skip nếu message này đã được xử lý (có original và translations)
+  // 2. Skip if this message has already been processed (has original and translations)
   if (original && translations) {
     console.log("Message already processed (has original and translations), skipping");
     return;
   }
 
-  // 3. Skip nếu message này là original
+  // 3. Skip if this message is the original
   if (message === original) {
     console.log("This is an original message that was already processed, skipping");
     return;
   }
 
-  // Lấy danh sách ngôn ngữ từ Firestore
+  // Get list of languages from Firestore
   const db = admin.firestore();
   const languagesCollection = db.collection("languages");
   const languagesSnapshot = await languagesCollection.get();
@@ -60,10 +60,7 @@ exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", as
   
   console.log("Current languages in database:", languages);
 
-  if (languages.length == 0) {
-    console.log("No languages in database, skipping");
-    return;
-  }
+  if (languages.length > 0) {
   const generationConfig = {
     temperature: 1,
     topP: 0.95,
@@ -115,8 +112,8 @@ exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", as
   } catch (error) {
     console.error("Translation error:", error);
   }
-
-  // 2. Phát hiện và thêm ngôn ngữ mới
+  }
+  // 2. Detect and add new language
   const detectSession = generativeModelPreview.startChat({
     tools: [{ 
       functionDeclarations: [{
@@ -139,7 +136,7 @@ exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", as
   });
 
   try {
-    // Lấy danh sách language codes hiện có
+    // Get list of existing language codes
     const existingCodes = languagesSnapshot.docs.map((doc) => doc.data().code);
     console.log("Existing language codes:", existingCodes);
 
@@ -163,7 +160,7 @@ exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", as
           await languagesCollection.add({ code: code });
           console.log("Successfully added new language code to database");
           
-          // Cập nhật danh sách ngôn ngữ local
+          // Update local language list
           languages.push(code);
         } catch (error) {
           console.error("Error adding new language code to database:", error);
@@ -180,7 +177,7 @@ exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", as
     console.error("Language detection error:", error);
   }
 
-  // Cuối cùng, lưu kết quả với original và translations
+  // Finally, save results with original and translations
   try {
     await event.data.after.ref.set({
       "original": message,
