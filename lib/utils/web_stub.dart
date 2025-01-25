@@ -1,5 +1,8 @@
-import 'dart:html' as html;
+import 'browser_interface.dart';
 
-String getBrowserLanguage() {
-  return html.window.navigator.language;
+class BrowserUtil implements BrowserInterface {
+  @override
+  String getBrowserLanguage() {
+    return 'unknown';
+  }
 }
