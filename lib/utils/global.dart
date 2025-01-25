@@ -1,6 +1,8 @@
 import 'dart:io';
-import 'dart:html' if (dart.library.html) 'dart:html' show window;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'web_stub.dart'
+    if (dart.library.html) 'web_stub.dart'
+    if (dart.library.io) 'non_web_stub.dart';
 
 class Global {
   Global._internal();
@@ -14,16 +16,16 @@ class Global {
   String getLanguageCode() {
     try {
       if (kIsWeb) {
-        // Lấy ngôn ngữ từ trình duyệt web
-        final browserLocale = window.navigator.language;
+        // Get language from web browser
+        final browserLocale = getBrowserLanguage();
         return browserLocale.split('-')[0].toLowerCase();
       } else {
-        // Lấy ngôn ngữ từ thiết bị mobile
+        // Get language from mobile device
         final deviceLocale = Platform.localeName;
         return deviceLocale.split('_')[0].toLowerCase();
       }
     } catch (e) {
-      // Trả về 'en' làm ngôn ngữ mặc định nếu có lỗi
+      // Return 'unknown' as default language if there's an error
       return 'unknown';
     }
   }

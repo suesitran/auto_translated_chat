@@ -55,6 +55,7 @@ exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", as
   console.log("Current languages in database:", languages);
 
   const chatSession = generativeModelPreview.startChat({
+    //use toolConfig instead of generationConfig to use function calling
     toolConfig: {
         functionDeclarations: [{
             name: "processMessage",
@@ -82,7 +83,7 @@ exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", as
                 required: ["detectedLanguage","translations"]
             }
         }],
-        functionCallMode: "ANY"
+        functionCallMode: "ANY"// để cho phép model tự do gọi function
     }
   });
 
