@@ -6,9 +6,9 @@ class Global {
   Global._internal();
   static final Global _instance = Global._internal();
   factory Global() => _instance;
-  
+
   final BrowserUtil _browserUtil = BrowserUtil();
-  
+
   init() {
     localLanguageCode = getLanguageCode();
   }

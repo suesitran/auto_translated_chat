@@ -10,4 +10,4 @@ class BrowserUtil implements BrowserInterface {
       return 'unknown';
     }
   }
-} 
+}
