@@ -58,7 +58,7 @@ class PublicChatScreen extends StatelessWidget {
                                   message: message.message,
                                   photoUrl: photoUrl,
                                   displayName: displayName,
-                                  translated: message.translated);
+                                  translations: message.translations);
                             },
                           ),
                         );

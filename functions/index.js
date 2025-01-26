@@ -1,150 +1,176 @@
-/* eslint-disable operator-linebreak */
-/* eslint-disable key-spacing */
-/* eslint-disable quotes */
+/* eslint-disable spaced-comment */
+/* eslint-disable comma-spacing */
+/* eslint-disable object-curly-spacing */
+/* eslint-disable require-jsdoc */
 /* eslint-disable no-trailing-spaces */
 /* eslint-disable comma-dangle */
-/* eslint-disable object-curly-spacing */
+/* eslint-disable key-spacing */
+/* eslint-disable quotes */
 /* eslint-disable indent */
 /* eslint-disable max-len */
+
 const v2 = require("firebase-functions/v2");
 const vertexAIApi = require("@google-cloud/vertexai");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-const project = "proj-atc";
-const location = "us-central1";
-const textModel = "gemini-1.5-flash";
-const visionModel = "gemini-1.0-pro-vision";
-
+const project = 'proj-atc';
+const location = 'us-central1';
+const textModel = 'gemini-1.5-flash';
+// const visionModel = 'gemini-1.0-pro-vision';
+async function saveNewLanguageCode(languagesCollection, detectedLanguage, languages) {
+  if (detectedLanguage && !languages.includes(detectedLanguage)) {
+    console.log(`Adding new language code: ${detectedLanguage}`);
+    try {
+      await languagesCollection.add({ code: detectedLanguage });
+      console.log("Successfully added new language code to database");
+      return true;
+    } catch (error) {
+      console.error("Error adding new language code to database:", error);
+      return false;
+    }
+  }
+  return false;
+}
 const vertexAI = new vertexAIApi.VertexAI({ project: project, location: location });
+
+// const generativeVisionModel = vertexAI.getGenerativeModel({
+//     model: visionModel,
+// });
 
 const generativeModelPreview = vertexAI.preview.getGenerativeModel({
   model: textModel,
 });
 
-// trigger when the chat data on public collection change to translate the message
+// use onDocumentWritten here to prepare to "edit message" feature later
 exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", async (event) => {
+
   const document = event.data.after.data();
   const message = document["message"];
-  const original = document["original"];
-  const translations = document["translations"];
+  console.log(`message: ${message}`);
 
-  console.log(`Processing message: ${message}`);
-  console.log(`Original: ${original}`);
-  console.log(`Has translations: ${translations != null}`);
-
-  // 1. Check conditions to skip
-  if (!message || message.trim() === '') {
-    console.log("Message is empty, skipping");
+  // no message? do nothing
+  if (message == undefined) {
     return;
   }
+  const curTranslated = document["translated"];
 
-  // 2. Skip if this message is the original
-  if (message === original) {
-    console.log("This is an original message that was already processed, skipping");
-    return;
-  }
+  // check if message is translated
+  if (curTranslated != undefined) {
+    // message is translated before, 
+    // check the original message
+    const original = curTranslated["original"];
 
-  // Get list of languages from Firestore
-  const db = admin.firestore();
-  const languagesCollection = db.collection("languages");
-  const languagesSnapshot = await languagesCollection.get();
-  const languages = languagesSnapshot.docs.map((e) => e.data().code);
-  
-  console.log("Current languages in database:", languages);
-
-  const chatSession = generativeModelPreview.startChat({
-    //use toolConfig instead of generationConfig to use function calling
-    toolConfig: {
-        functionDeclarations: [{
-            name: "processMessage",
-            description: "Process message language and translations",
-            parameters: {
-                type: "object",
-                properties: {
-                    detectedLanguage: {
-                        type: "string",
-                        description: "ISO 639-1 language code of the detected language",
-                        pattern: "^[a-z]{2}$"
-                    },
-                    translations: {
-                        type: "array",
-                        description: "Translations of the message to all existing languages",
-                        items: {
-                            type: "object",
-                            properties: {
-                                translation: { type: "string" },
-                                code: { type: "string" }
-                            }
-                        }
-                    }
-                },
-                required: ["detectedLanguage","translations"]
-            }
-        }],
-        functionCallMode: "ANY"// để cho phép model tự do gọi function
+    console.log('Original: ', original);
+    // message is same as original, meaning it's already translated. Do nothing
+    if (message == original) {
+      return;
     }
+  }
+    // Get list of languages from Firestore
+    const db = admin.firestore();
+    const languagesCollection = db.collection("languages");
+    const languagesSnapshot = await languagesCollection.get();
+    const languages = languagesSnapshot.docs.map((e) => e.data().code);
+    console.log("Current languages in database:", languages);
+
+  const generationConfig = {
+    temperature: 1,
+    topP: 0.95,
+    topK: 64,
+    maxOutputTokens: 8192,
+    responseMimeType: "application/json",
+    responseSchema: {
+      type: "object",
+      properties:
+      {
+        "detectedLanguage": {
+          type: "string",
+          description: "The ISO 639-1 language code that was detected",
+          pattern: "^[a-z]{2}$"
+        },
+        "translation": languages.reduce((acc, lang) => {
+          acc[lang] = { type: "string" };
+          return acc;
+        }, {}),
+      },
+      required: ["detectedLanguage", "translation"]
+    },
+  };
+  const translateSession = generativeModelPreview.startChat({
+    generateContentConfig: generationConfig,
+    // tools: tools,
+    // toolConfig: {
+    //   functionCallingConfig:{
+    //     mode: "ANY"
+    //   }
+    // }
   });
 
-  let translated = [];
-  try {
-    const result = await chatSession.sendMessage(`
-      Translate this message: "${message}"
-      Target languages: [${languages.join(',')}]
-      
-      Return result in this exact JSON format:
-      {
-        "language": "detected_language_code",
-        "translations": {
-          "language_code": "translated_text"
+  const result = await translateSession.sendMessage(`
+    The target languages: ${languages.join(", ")}.
+    The input text: "${message}". You must do:
+        1. If the target languages are not empty, translate the input text to target languages, else if the target languages are empty, return null as value of "translation" field.
+        2. detect language of the input text.
+        Example: Translate "Chào" to ["ja", "en"]:
+        {
+          "detectedLanguage": "vi",
+          "translation": {"ja": "こんにちは", "en": "Hello"},
         }
-      }
-      
-      Only return the JSON, no explanation or other text.
-    `);
-    console.log("Response:", JSON.stringify(result.response));
+        `
+  );
 
-    // Find the start and end of the JSON in the text
-    const responseText = result.response.candidates[0].content.parts[0].text;
-    const jsonStart = responseText.indexOf('{');
-    const jsonEnd = responseText.lastIndexOf('}') + 1;
-    const jsonStr = responseText.slice(jsonStart, jsonEnd);
-    
-    // Parse JSON string
-    const parsedResponse = JSON.parse(jsonStr);
-    
-    const detectedLanguage = parsedResponse.language;
-    const translations = Object.entries(parsedResponse.translations).map(([code, translation]) => ({
-      code,
-      translation
-    }));
-    
-    translated = translations;
-    console.log(`Translations: ${JSON.stringify(translated)}`);
-    console.log(`Detected language: ${detectedLanguage}`);
+  const response = result.response;
+  console.log('Response:', JSON.stringify(response));
 
-    if (detectedLanguage && !languages.includes(detectedLanguage)) {
-      console.log(`Adding new language code: ${detectedLanguage}`);
-      try {
-        await languagesCollection.add({ code: detectedLanguage });
-        console.log("Successfully added new language code to database");
-      } catch (error) {
-        console.error("Error adding new language code to database:", error);
-      }
+  const responseContent = response.candidates[0].content;
+  let translationData = null;
+  let detectedLanguage = null;
+
+  if (responseContent.parts && responseContent.parts[0].text) {
+    try {
+      // Trích xuất JSON từ phần text (bỏ qua các ký tự markdown ```)
+      const jsonText = responseContent.parts[0].text.replace(/```json\n|\n```/g, '');
+      translationData = JSON.parse(jsonText);
+      detectedLanguage = translationData.detectedLanguage;
+      console.log('Detected language:', detectedLanguage);
+      console.log('Translation data:', translationData.translation);
+    } catch (error) {
+      console.error('Error parsing translation response:', error);
     }
-  } catch (error) {
-    console.error("Processing error:", error);
   }
 
-  // Finally, save results with original and translations
-  try {
-    await event.data.after.ref.set({
-      "original": message,
-      "translations": translated,
-    }, { merge: true });
-    console.log("Successfully saved translations");
-  } catch (error) {
-    console.error("Error saving translations:", error);
+  // Lưu ngôn ngữ mới nếu được phát hiện
+  if (detectedLanguage) {
+    await saveNewLanguageCode(languagesCollection, detectedLanguage, languages);
   }
+
+  // Cập nhật document với bản dịch
+  return event.data.after.ref.set({
+    'translated': {
+      'original': message,
+      ...translationData.translation
+    }
+  }, { merge: true });
 });
+// const tools = [
+  //   {
+  //     functionDeclarations: [
+  //       {
+  //         name: "saveNewLanguageCode",
+  //         description: "Save a new detected language code to the database if it doesn't exist",
+  //         parameters: {
+  //           type: "object",
+  //           properties: {
+  //             detectedLanguage: {
+  //               type: "string",
+  //               description: "The ISO 639-1 language code that was detected",
+  //               pattern: "^[a-z]{2}$" // Thêm pattern để đảm bảo format ISO 639-1
+  //             }
+  //           },
+  //           required: ["detectedLanguage"]
+  //         }
+  //       },
+  //     ]
+  //   }];
