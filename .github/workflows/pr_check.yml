@@ -8,6 +8,10 @@ on:
     branches:
       - main
 
+  pull_request:
+    branches:
+      - main
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -56,10 +60,10 @@ jobs:
     - name: Run tests
       run: |
         flutter test --coverage
-    - name: build apk and web
-      run: |
-        flutter build apk --debug
-        flutter build web
+    - name: build apk
+      run: flutter build apk --debug
+    - name: build web
+      run: flutter build web
   ios_validation:
     name: 'iOS validation'
     runs-on: macos-14
