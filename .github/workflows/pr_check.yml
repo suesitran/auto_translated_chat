@@ -62,7 +62,7 @@ jobs:
         flutter build web
   ios_validation:
     name: 'iOS validation'
-    runs-on: macos-latest
+    runs-on: macos-14
     concurrency:
       cancel-in-progress: true
       group: ${{ github.event.pull_request.number || github.event.pull_request_target.number || github.ref }}
