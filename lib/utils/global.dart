@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'locale_language/web_stub.dart'
-    if (dart.library.html) 'web_browser.dart';
+import 'web_stub.dart' if (dart.library.html) 'web_browser.dart';
 
 class Global {
   Global._internal();
