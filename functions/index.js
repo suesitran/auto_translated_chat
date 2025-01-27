@@ -100,19 +100,13 @@ exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", as
   };
   const translateSession = generativeModelPreview.startChat({
     generateContentConfig: generationConfig,
-    // tools: tools,
-    // toolConfig: {
-    //   functionCallingConfig:{
-    //     mode: "ANY"
-    //   }
-    // }
   });
 
   const result = await translateSession.sendMessage(`
     The target languages: ${languages.join(", ")}.
     The input text: "${message}". You must do:
         1. If the target languages are not empty, translate the input text to target languages, else if the target languages are empty, return null as value of "translation" field.
-        2. detect language of the input text.
+        2. detect language of the input text. Only return the language code that is in ISO 639-1 format. If you can't detect the language, return "und" as value of "detectedLanguage" field.
         Example: Translate "Chào" to ["ja", "en"]:
         {
           "detectedLanguage": "vi",
@@ -128,7 +122,6 @@ exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", as
   let translationData = null;
   let detectedLanguage = null;
 
-  if (responseContent.parts && responseContent.parts[0].text) {
     try {
       // Trích xuất JSON từ phần text (bỏ qua các ký tự markdown ```)
       const jsonText = responseContent.parts[0].text.replace(/```json\n|\n```/g, '');
@@ -139,10 +132,9 @@ exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", as
     } catch (error) {
       console.error('Error parsing translation response:', error);
     }
-  }
 
   // Lưu ngôn ngữ mới nếu được phát hiện
-  if (detectedLanguage) {
+  if (detectedLanguage && detectedLanguage !== "und") {
     await saveNewLanguageCode(languagesCollection, detectedLanguage, languages);
   }
 
@@ -154,23 +146,3 @@ exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", as
     }
   }, { merge: true });
 });
-// const tools = [
-  //   {
-  //     functionDeclarations: [
-  //       {
-  //         name: "saveNewLanguageCode",
-  //         description: "Save a new detected language code to the database if it doesn't exist",
-  //         parameters: {
-  //           type: "object",
-  //           properties: {
-  //             detectedLanguage: {
-  //               type: "string",
-  //               description: "The ISO 639-1 language code that was detected",
-  //               pattern: "^[a-z]{2}$" // Thêm pattern để đảm bảo format ISO 639-1
-  //             }
-  //           },
-  //           required: ["detectedLanguage"]
-  //         }
-  //       },
-  //     ]
-  //   }];

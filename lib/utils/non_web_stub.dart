@@ -1,3 +1,0 @@
-String getBrowserLanguage() {
-  return 'unknown';
-}

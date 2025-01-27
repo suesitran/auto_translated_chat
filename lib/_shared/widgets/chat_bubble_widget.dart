@@ -73,10 +73,11 @@ class ChatBubble extends StatelessWidget {
           ),
           // english version (if there is)
           if (translations.isNotEmpty &&
-              translations.containsKey(Global.localLanguageCode))
+              translations.containsKey(Global.localLanguageCode) &&
+              translations[Global.localLanguageCode] != null)
             buildTranslation(
                 key: Global.localLanguageCode,
-                value: translations[Global.localLanguageCode],
+                value: translations[Global.localLanguageCode]!,
                 context: context,
                 isMine: isMine)
         ],
