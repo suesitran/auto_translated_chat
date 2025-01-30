@@ -56,13 +56,13 @@ jobs:
     - name: Run tests
       run: |
         flutter test --coverage
-    - name: build apk and web
-      run: |
-        flutter build apk --debug
-        flutter build web
+    - name: build apk
+      run: flutter build apk --debug
+    - name: build web
+      run: flutter build web
   ios_validation:
     name: 'iOS validation'
-    runs-on: macos-latest
+    runs-on: macos-14
     concurrency:
       cancel-in-progress: true
       group: ${{ github.event.pull_request.number || github.event.pull_request_target.number || github.ref }}
@@ -86,14 +86,14 @@ jobs:
       with:
         flutter-version: '3.22.0'
         channel: 'stable'
-    - name: setup XCode
-      uses: maxim-lobanov/setup-xcode@v1.6.0
-      with:
-        xcode-version: 15.4
-    - name: setup Cocoapod
-      uses: maxim-lobanov/setup-cocoapods@v1.4.0
-      with:
-        version: 1.13.0
+#    - name: setup XCode
+#      uses: maxim-lobanov/setup-xcode@v1.6.0
+#      with:
+#        xcode-version: 15.4
+#    - name: setup Cocoapod
+#      uses: maxim-lobanov/setup-cocoapods@v1.4.0
+#      with:
+#        version: 1.13.0
     - name: build iOS no codesign
       run: |
         flutter pub get
