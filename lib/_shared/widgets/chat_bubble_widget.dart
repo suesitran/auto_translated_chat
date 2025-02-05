@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_network/image_network.dart';
 
@@ -71,15 +72,13 @@ class ChatBubble extends StatelessWidget {
                 .bodyMedium
                 ?.copyWith(color: Colors.white),
           ),
-          // english version (if there is)
           if (translations.isNotEmpty &&
               translations.containsKey(Global.localLanguageCode) &&
               translations[Global.localLanguageCode] != null)
-            buildTranslation(
-                key: Global.localLanguageCode,
-                value: translations[Global.localLanguageCode]!,
-                context: context,
-                isMine: isMine)
+            if (kDebugMode)
+              buildTranslation(context: context, isMine: isMine)
+            else if (!isMine) //in production mode, only show translation for other users, not mine
+              buildTranslation(context: context, isMine: isMine)
         ],
       ),
     ));
@@ -95,19 +94,17 @@ class ChatBubble extends StatelessWidget {
   }
 
   Widget buildTranslation(
-      {required String key,
-      required value,
-      required BuildContext context,
-      required bool isMine}) {
+      {required BuildContext context, required bool isMine}) {
     return Text.rich(
       TextSpan(children: [
         TextSpan(
-            text: '$key ',
+            text: '${Global.localLanguageCode} ',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isMine ? Colors.black87 : Colors.grey)),
         TextSpan(
-          text: value,
+          text:
+              translations[Global.localLanguageCode] ?? 'translation not found',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontStyle: FontStyle.italic,
               color: isMine ? Colors.black87 : Colors.grey),

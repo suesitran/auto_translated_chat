@@ -45,7 +45,6 @@ const generativeModelPreview = vertexAI.preview.getGenerativeModel({
 
 // use onDocumentWritten here to prepare to "edit message" feature later
 exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", async (event) => {
-
   const document = event.data.after.data();
   const message = document["message"];
   console.log(`message: ${message}`);
@@ -105,9 +104,9 @@ exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", as
   const result = await translateSession.sendMessage(`
     The target languages: ${languages.join(", ")}.
     The input text: "${message}". You must do:
-        1. If the target languages are not empty, translate the input text to target languages, else if the target languages are empty, return null as value of "translation" field.
-        2. detect language of the input text. Only return the language code that is in ISO 639-1 format. If you can't detect the language, return "und" as value of "detectedLanguage" field.
-        Example: Translate "Chào" to ["ja", "en"]:
+    1. detect language of the input text. Only return the language code that is in ISO 639-1 format. If you can't detect the language, return "und" as value of "detectedLanguage" field.
+    2. If the target languages are not empty and the detected language is not "und", translate the input text to target languages, ignore language that is identical to the detected language. Else, return null as value of "translation" field.
+        Example: Translate "Chào" to ["ja", "en", "vi"]:
         {
           "detectedLanguage": "vi",
           "translation": {"ja": "こんにちは", "en": "Hello"},
