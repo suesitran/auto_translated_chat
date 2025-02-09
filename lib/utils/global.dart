@@ -15,16 +15,20 @@ class Global {
 
   static String localLanguageCode = 'unknown';
   String getLanguageCode() {
-    String lang;
     try {
       if (kIsWeb) {
         // Lấy ngôn ngữ từ trình duyệt web
-        lang = window.navigator.language;
+        final browserLocale = window.navigator.language;
+        // ignore: unnecessary_null_comparison
+        if (browserLocale == null) {
+          return 'unknown';
+        }
+        return browserLocale.split('-')[0].toLowerCase();
       } else {
         // Lấy ngôn ngữ từ thiết bị mobile
-        lang = io.Platform.localeName; // Sử dụng 'dart:io' cho thiết bị di động
+        final deviceLocale = io.Platform.localeName; // Sử dụng 'dart:io' cho thiết bị di động
+        return deviceLocale.split('_')[0].toLowerCase();
       }
-      return lang.split('_')[0].toLowerCase();
     } catch (e) {
       // Trả về 'en' làm ngôn ngữ mặc định nếu có lỗi
       return 'unknown';
