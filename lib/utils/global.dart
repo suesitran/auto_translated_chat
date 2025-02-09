@@ -19,12 +19,12 @@ class Global {
       if (kIsWeb) {
         // Lấy ngôn ngữ từ trình duyệt web
         final browserLocale = window.navigator.language;
-        return browserLocale.split('-')[0].toLowerCase();
+        return browserLocale?.split('-')[0].toLowerCase() ?? 'unknown_browser';
       } else {
         // Lấy ngôn ngữ từ thiết bị mobile
         final deviceLocale =
             io.Platform.localeName; // Sử dụng 'dart:io' cho thiết bị di động
-        return deviceLocale.split('_')[0].toLowerCase();
+        return deviceLocale?.split('_')[0].toLowerCase() ?? 'unknown_device';
       }
     } catch (e) {
       // Trả về 'en' làm ngôn ngữ mặc định nếu có lỗi
