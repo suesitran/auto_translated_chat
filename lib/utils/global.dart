@@ -21,12 +21,14 @@ class Global {
         final browserLocale = window.navigator.language;
         // ignore: unnecessary_null_comparison
         if (browserLocale == null) {
+          //fix Error: Method 'split' cannot be called on 'String?' because it is potentially null.
           return 'unknown';
         }
         return browserLocale.split('-')[0].toLowerCase();
       } else {
         // Lấy ngôn ngữ từ thiết bị mobile
-        final deviceLocale = io.Platform.localeName; // Sử dụng 'dart:io' cho thiết bị di động
+        final deviceLocale =
+            io.Platform.localeName; // Sử dụng 'dart:io' cho thiết bị di động
         return deviceLocale.split('_')[0].toLowerCase();
       }
     } catch (e) {
