@@ -1,7 +1,6 @@
-// ignore_for_file: avoid_web_libraries_in_flutter
-import 'dart:io';
-import 'dart:html' if (dart.library.html) 'dart:html' show window;
+import 'dart:io' as io;
 import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
+import 'package:universal_html/html.dart';
 
 class Global {
   Global._internal();
@@ -23,7 +22,8 @@ class Global {
         return browserLocale.split('-')[0].toLowerCase();
       } else {
         // Lấy ngôn ngữ từ thiết bị mobile
-        final deviceLocale = Platform.localeName;
+        final deviceLocale =
+            io.Platform.localeName; // Sử dụng 'dart:io' cho thiết bị di động
         return deviceLocale.split('_')[0].toLowerCase();
       }
     } catch (e) {
