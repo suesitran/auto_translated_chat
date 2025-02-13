@@ -17,22 +17,22 @@ class Global {
   String getLanguageCode() {
     try {
       if (kIsWeb) {
-        // Lấy ngôn ngữ từ trình duyệt web
+        // Get language from web browser
         final browserLocale = window.navigator.language;
         // ignore: unnecessary_null_comparison
         if (browserLocale == null) {
-          //fix Error: Method 'split' cannot be called on 'String?' because it is potentially null.
+          // fix Error: Method 'split' cannot be called on 'String?' because it is potentially null.
           return 'unknown';
         }
         return browserLocale.split('-')[0].toLowerCase();
       } else {
-        // Lấy ngôn ngữ từ thiết bị mobile
+        // Get language from mobile device
         final deviceLocale =
-            io.Platform.localeName; // Sử dụng 'dart:io' cho thiết bị di động
+            io.Platform.localeName; // Use 'dart:io' for mobile devices
         return deviceLocale.split('_')[0].toLowerCase();
       }
     } catch (e) {
-      // Trả về 'en' làm ngôn ngữ mặc định nếu có lỗi
+      // Return 'en' as default language if there's an error
       return 'unknown';
     }
   }

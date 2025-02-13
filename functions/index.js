@@ -32,7 +32,7 @@ const generativeModelPreview = vertexAI.preview.getGenerativeModel({
   model: textModel,
 });
 
-// use onDocumentWritten here to prepare to "edit message" feature later
+// use onDocumentWritten here to prepare for "edit message" feature later
 exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", async (event) => {
   const document = event.data.after.data();
   const message = document["message"];
@@ -46,7 +46,7 @@ exports.onChatWritten = v2.firestore.onDocumentWritten("/public/{messageId}", as
 
   // check if message is translated
   if (curTranslated != undefined) {
-    // message is translated before, 
+    // message was translated before, 
     // check the original message
     const original = curTranslated["original"];
 
@@ -115,7 +115,7 @@ If you can't detect the language, return "und" as value of "detectedLanguage" fi
   let detectedLanguage = null;
 
   try {
-    // Trích xuất JSON từ phần text (bỏ qua các ký tự markdown ```)
+    // Extract JSON from text part (remove markdown ``` characters)
     const jsonText = responseContent.parts[0].text.replace(/```json\n|\n```/g, "");
     translationData = JSON.parse(jsonText);
     detectedLanguage = translationData.detectedLanguage;
@@ -125,12 +125,12 @@ If you can't detect the language, return "und" as value of "detectedLanguage" fi
     console.error("Error parsing translation response:", error);
   }
 
-  // Lưu ngôn ngữ mới nếu được phát hiện
+  // Save new language if detected
   if (detectedLanguage && detectedLanguage !== "und") {
     await saveNewLanguageCode(languagesCollection, detectedLanguage, languages);
   }
 
-  // Cập nhật document với bản dịch
+  // Update document with translation
   return event.data.after.ref.set({
     "translated": {
       "original": message,
