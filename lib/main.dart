@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:public_chat/features/genai_setting/bloc/genai_bloc.dart';
@@ -14,6 +17,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  if (kDebugMode) {
+    /// NOTE: This setting is to run on Flutter web only
+    /// to run on Flutter mobile, please set host to be your machine's IP address
+    /// and update host in file firebase.json
+    FirebaseAuth.instance.useAuthEmulator('localhost', 8000);
+    FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8002);
+  }
   ServiceLocator.instance.initialise();
   Global().init();
   runApp(BlocProvider<GenaiBloc>(
