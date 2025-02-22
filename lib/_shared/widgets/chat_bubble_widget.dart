@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_network/image_network.dart';
+
+import '../../utils/global.dart';
 
 class ChatBubble extends StatelessWidget {
   final bool isMine;
@@ -69,34 +72,13 @@ class ChatBubble extends StatelessWidget {
                 .bodyMedium
                 ?.copyWith(color: Colors.white),
           ),
-          // english version (if there is)
-          if (translations.isNotEmpty)
-            ...translations.entries
-                .where(
-                  (element) => element.key != 'original',
-                )
-                .map(
-                  (e) => Text.rich(
-                    TextSpan(children: [
-                      TextSpan(
-                          text: '${e.key} ',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color:
-                                      isMine ? Colors.black87 : Colors.grey)),
-                      TextSpan(
-                        text: e.value,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontStyle: FontStyle.italic,
-                            color: isMine ? Colors.black87 : Colors.grey),
-                      )
-                    ]),
-                    textAlign: isMine ? TextAlign.right : TextAlign.left,
-                  ),
-                )
+          if (translations.isNotEmpty &&
+              translations.containsKey(Global.localLanguageCode) &&
+              translations[Global.localLanguageCode] != null)
+            if (kDebugMode)
+              buildTranslation(context: context, isMine: isMine)
+            else if (!isMine) //in production mode, only show translation for other users, not mine
+              buildTranslation(context: context, isMine: isMine)
         ],
       ),
     ));
@@ -108,6 +90,27 @@ class ChatBubble extends StatelessWidget {
             isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: isMine ? widgets.reversed.toList() : widgets,
       ),
+    );
+  }
+
+  Widget buildTranslation(
+      {required BuildContext context, required bool isMine}) {
+    return Text.rich(
+      TextSpan(children: [
+        TextSpan(
+            text: '${Global.localLanguageCode} ',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isMine ? Colors.black87 : Colors.grey)),
+        TextSpan(
+          text:
+              translations[Global.localLanguageCode] ?? 'translation not found',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontStyle: FontStyle.italic,
+              color: isMine ? Colors.black87 : Colors.grey),
+        )
+      ]),
+      textAlign: isMine ? TextAlign.right : TextAlign.left,
     );
   }
 }

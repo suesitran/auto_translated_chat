@@ -8,12 +8,14 @@ import 'package:public_chat/service_locator/service_locator.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+import 'utils/global.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   ServiceLocator.instance.initialise();
-
+  Global().init();
   runApp(BlocProvider<GenaiBloc>(
     create: (context) => GenaiBloc(),
     child: const MainApp(),
