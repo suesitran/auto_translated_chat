@@ -17,10 +17,16 @@ void main() {
     },
   );
 
+  tearDown(
+    () {
+      reset(authentication);
+    },
+  );
+
   blocTest(
     'when stream does not update,'
     ' and user is not authenticated,'
-    ' then do not emit states',
+    ' then do not change state',
     build: () => AuthenticationCubit(),
     setUp: () {
       when(
@@ -33,12 +39,15 @@ void main() {
       ).thenReturn(false);
     },
     expect: () => [],
+    verify: (bloc) {
+      expect(bloc.state, isA<AuthenticationInitial>());
+    },
   );
 
-  blocTest(
+  blocTest<AuthenticationCubit, AuthenticationState>(
     'when stream does not update,'
     ' and user is authenticated,'
-    ' then emit Authenticated',
+    ' then change state to Authenticated',
     build: () => AuthenticationCubit(),
     setUp: () {
       when(
@@ -53,7 +62,10 @@ void main() {
         () => authentication.uid,
       ).thenReturn('uid');
     },
-    expect: () => [isA<Authenticated>()],
+    expect: () => [],
+    verify: (bloc) {
+      expect(bloc.state, isA<Authenticated>());
+    },
   );
 
   blocTest(
