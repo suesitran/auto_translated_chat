@@ -27,7 +27,7 @@ class ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Widget> widgets = [];
-    final _localLanguageCode = Global.localLanguageCode;
+    final localLanguageCode = Global.localLanguageCode;
     // user avatar
     widgets.add(Padding(
       padding: const EdgeInsets.all(8.0),
@@ -75,10 +75,10 @@ class ChatBubble extends StatelessWidget {
                 .bodyMedium
                 ?.copyWith(color: Colors.white),
           ),
-          if (detectedLanguage != _localLanguageCode &&
+          if (detectedLanguage != localLanguageCode &&
               translations.isNotEmpty &&
-              translations.containsKey(_localLanguageCode) &&
-              translations[_localLanguageCode] != null)
+              translations.containsKey(localLanguageCode) &&
+              translations[localLanguageCode] != null)
             if (kDebugMode)
               buildTranslation(context: context, isMine: isMine)
             else if (!isMine) //in production mode, only show translation for other users, not mine
