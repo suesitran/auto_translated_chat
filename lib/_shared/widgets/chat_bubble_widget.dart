@@ -11,7 +11,7 @@ class ChatBubble extends StatelessWidget {
   final String? photoUrl;
   final String? displayName;
   final Map<String, dynamic> translations;
-  final String detectedLanguage;
+  final String? detectedLanguage;
 
   final double _iconSize = 24.0;
 
@@ -21,13 +21,13 @@ class ChatBubble extends StatelessWidget {
       required this.photoUrl,
       required this.displayName,
       this.translations = const {},
-      required this.detectedLanguage,
+      this.detectedLanguage,
       super.key});
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> widgets = [];
-
+    final _localLanguageCode = Global.localLanguageCode;
     // user avatar
     widgets.add(Padding(
       padding: const EdgeInsets.all(8.0),
@@ -75,10 +75,10 @@ class ChatBubble extends StatelessWidget {
                 .bodyMedium
                 ?.copyWith(color: Colors.white),
           ),
-          if (detectedLanguage != Global.localLanguageCode &&
+          if (detectedLanguage != _localLanguageCode &&
               translations.isNotEmpty &&
-              translations.containsKey(Global.localLanguageCode) &&
-              translations[Global.localLanguageCode] != null)
+              translations.containsKey(_localLanguageCode) &&
+              translations[_localLanguageCode] != null)
             if (kDebugMode)
               buildTranslation(context: context, isMine: isMine)
             else if (!isMine) //in production mode, only show translation for other users, not mine
