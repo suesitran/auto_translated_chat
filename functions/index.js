@@ -132,6 +132,7 @@ If you can't detect the language, return "und" as value of "detectedLanguage" fi
 
   // Update document with translation
   return event.data.after.ref.set({
+    "detectedLanguage": detectedLanguage,
     "translated": {
       "original": message,
       ...translationData.translation
