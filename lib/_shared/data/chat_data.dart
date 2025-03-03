@@ -7,17 +7,20 @@ final class Message {
   final String sender;
   final Timestamp timestamp;
   final Map<String, dynamic> translations;
+  final String detectedLanguage;
 
   Message({required this.message, required this.sender})
       : id = '',
         timestamp = Timestamp.now(),
-        translations = {};
+        translations = {},
+        detectedLanguage = '';
 
   Message.fromMap(this.id, Map<String, dynamic> map)
       : message = map['message'] ?? '',
         sender = map['sender'],
         timestamp = map['time'],
-        translations = map['translated'] as Map<String, dynamic>? ?? {};
+        translations = map['translated'] as Map<String, dynamic>? ?? {},
+        detectedLanguage = map['detectedLanguage'] ?? '';
 
   Map<String, dynamic> toMap() =>
       {'message': message, 'sender': sender, 'time': timestamp};
